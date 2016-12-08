@@ -19,19 +19,22 @@ typedef enum {
 	fasttask1 = 0,
 	fasttask2,
 	fasttask3,
+	fasttask4,
+	fasttask5,
+	fasttask6,
+	fasttask7,
+	fasttask8,
 	max_fast_tasks
 }fast_tasks_e;
 
 typedef enum {
 	midtask1 = 0,
 	midtask2,
-	midtask3,
 	max_mid_tasks
 }mid_tasks_e;
 
 typedef enum {
 	slowtask1 = 0,
-	slowtask2,
 	max_slow_tasks
 }slow_tasks_e;
 
