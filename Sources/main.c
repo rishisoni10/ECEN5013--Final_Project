@@ -282,6 +282,9 @@ void task_CaptureGPS(void){
 	Task_Display();
 	Task_Display();
 	Task_Display();
+#if ( UNIT_TEST == Test_Task_On)
+	LOG_0("Task8");
+#endif
 }
 
 void task_CheckEngineHealth(void){
@@ -303,6 +306,9 @@ void task_CheckEngineHealth(void){
 	Task_Display();
 	Task_Display();
 	Task_Display();
+#if ( UNIT_TEST == Test_Task_On)
+	LOG_0("Task7");
+#endif
 }
 
 
@@ -321,6 +327,9 @@ void task_UpdateDistance(void){
 	Task_Display();
 	Task_Display();
 	Task_Display();
+#if ( UNIT_TEST == Test_Task_On)
+	LOG_0("Task6");
+#endif
 }
 
 
@@ -334,6 +343,9 @@ void task_UpdateSpeed(void){
 		Task_Display();
 	    Task_Display();
 		Task_Display();
+#if ( UNIT_TEST == Test_Task_On)
+	LOG_0("Task5");
+#endif
 }
 
 void Speed_check(void){
@@ -381,6 +393,9 @@ void task_UpdateDirection(void){
 	 Task_Display();
 	 Task_Display();
 	 Task_Display();
+#if ( UNIT_TEST == Test_Task_On)
+	LOG_0("Task4");
+#endif
 }
 
 void task_UpdateCordinate(void){
@@ -398,6 +413,9 @@ void task_UpdateCordinate(void){
 	Task_Display();
 	Task_Display();
 	Task_Display();
+#if ( UNIT_TEST == Test_Task_On)
+	LOG_0("Task3");
+#endif
 }
 
 
@@ -419,6 +437,9 @@ void task_CalculatePosition(void){
     Task_Display();
     Task_Display();
     Task_Display();
+#if ( UNIT_TEST == Test_Task_On)
+	LOG_0("Task2");
+#endif
 }
 
 void task_CaptureEngineTemp(void){
@@ -435,6 +456,10 @@ void task_CaptureEngineTemp(void){
 	Task_Display();
 	Task_Display();
 	Task_Display();
+
+#if ( UNIT_TEST == Test_Task_On)
+	LOG_0("Task1");
+#endif
 }
 
 
@@ -478,6 +503,7 @@ int main(void)
     while(1){
     	statemachine();
     	if(state == state8){
+#if( UNIT_TEST == UNIT_TEST_OFF)
 			Speed_check();
 			if(onesecond){
 				logtask_trig = 1;
@@ -493,6 +519,41 @@ int main(void)
 			 tasktorun = &Task_Display;
 			}
 			tasktorun();
+#endif
+#if( UNIT_TEST == Test_Temp_On)
+			task_CaptureEngineTemp();
+			LOG_2("temp = ",temp_diaplay);
+#endif
+#if( UNIT_TEST == Test_RTC_On)
+			LOG_return();
+			LOG_0("Time - ");
+			LOG_2(" : ",minutes);
+			LOG_2(" : ",seconds);
+			LOG_0("\n\r");
+#endif
+#if( UNIT_TEST == Test_Touch_On)
+			Speed_check();
+			LOG_2("temp = ",Speed);
+
+#endif
+#if(( UNIT_TEST == Test_Main_On) || ( UNIT_TEST == Test_Task_On))
+			Speed_check();
+						if(onesecond){
+							logtask_trig = 1;
+							fasttask_trig = 0;
+							midtask_trig = 0;
+							slowtask_trig = 0;
+							onesecond = 0;
+							traveltimer = 0;
+						}
+						task_scheduler();
+						istasktorun = task_Pop(&taskbuffer,&tasktorun);
+						if(!istasktorun){
+						 tasktorun = &Task_Display;
+						}
+						tasktorun();
+
+#endif
 		}
     }
 }
