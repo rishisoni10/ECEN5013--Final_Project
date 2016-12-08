@@ -25,7 +25,7 @@ signed  int xz_angle;
 signed  int yz_angle;
 
 
-struct tipo_mediana arr_medianas[3];
+struct different_samples arr_samples[3];
 //unsigned char ADC_buffer[3];
 unsigned int cat;
 unsigned int offset;
@@ -43,8 +43,8 @@ uint16_t ti_fall;
 
    alpha = asin(CO/hip);
 
-   where CO  cateto opuesto
-   hip = hipotenusa= magnitud
+   Where CO opposite
+    Hip = hypotenuse = magnitude
    the other way can be
 
 
@@ -53,10 +53,10 @@ uint16_t ti_fall;
 
    where x/y can take values from -inf to + inf
 
-     and for�
+     and for´
 
 
-   Note: Direct calculos based on  angle = asin(x/g)
+   Note: Direct calculations based on  angle = asin(x/g)
    is possible but is only valid when plane XY is the in the same line of G
 
    no accept small tilt of the board.
@@ -83,27 +83,27 @@ unsigned int sqrt_16(unsigned int value)
 /**
  * \brief   Calculates the median of 8 integer samples
  * \author  Luis Puebla
- * \param   new_value, struct tipo_mediana *medicion
+ * \param   new_value, struct different_samples *measurement
  * \return   a median value of the last 8 samples
  * \todo
  * \warning
  */
-int median(int new_value, struct tipo_mediana *medicion)
+int median(int new_value, struct different_samples *measurement)
 {
-	int buffer_ord[NUM_MUESTRAS_MEDIANA];
+	int buffer_ord[NUM_MEDIUM_SAMPLES];
   	int i;
   	int temp1;
-  	int bandera;
+  	int flag;
 
-  	medicion->ap_muestras++;
-  	medicion->ap_muestras &= 0x7;  //de 0 a 7
-  	medicion->buffer_muestras[medicion->ap_muestras]=new_value;
-	//copia el buffer en temporal
-  	for(i=0;i<8;i++) buffer_ord[i]=medicion->buffer_muestras[i];
-  	//ordena el buffer temporal
+  	measurement->samples++;
+  	measurement->samples &= 0x7;  //de 0 a 7
+  	measurement->buffer_samples[measurement->samples]=new_value;
+  	//Copy in temporary buffer
+  	for(i=0;i<8;i++) buffer_ord[i]=measurement->buffer_samples[i];
+  	//Sort the temporary buffer
   	do
   	{
-   		bandera=0;
+   		flag=0;
    		for (i=0;i<7;i++)
    		{
     		if (buffer_ord[i] > buffer_ord[i+1])
@@ -111,12 +111,12 @@ int median(int new_value, struct tipo_mediana *medicion)
       			temp1 = buffer_ord[i];
       			buffer_ord[i] = buffer_ord[i+1];
       			buffer_ord[i+1] = temp1;
-      			bandera=1;
+      			flag=1;
      		}
     	}
   	}
 
-  	while (bandera);
+  	while (flag);
   	//temp1= (buffer_ord[3] + buffer_ord[4])/2;
        	temp1= buffer_ord[3];
   	return temp1;
@@ -131,14 +131,14 @@ void angle_calculation(void)
    */
 
    nv = (signed char)(resultx);
-   X_acc = median(nv, &arr_medianas[0]);
+   X_acc = median(nv, &arr_samples[0]);
 
 
    nv = (signed char)(resulty);
-   Y_acc = median(nv, &arr_medianas[1]);
+   Y_acc = median(nv, &arr_samples[1]);
 
    nv = (signed char)(resultz);
-   Z_acc = median(nv, &arr_medianas[2]);
+   Z_acc = median(nv, &arr_samples[2]);
 
    x2        = X_acc*X_acc;
    y2        = Y_acc*Y_acc;
