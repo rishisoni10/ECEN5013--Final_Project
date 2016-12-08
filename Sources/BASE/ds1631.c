@@ -1,43 +1,37 @@
-/*
- * ds1631.c
- *
- *  Created on: Nov 21, 2016
- *      Author: vikhyat
- */
-
 #include "main.h"
 uint16_t MASK = 0x8000;
-float MUL =64;
-#define ResetMultiplciationfactor  MUL = 64;
+float MUL = 64;
 
-void start_Temperature_Conversion(void)
+void DS1631_Start_Continuos_Conversion (void)
 {
-	I2C_WriteCommand(DS1631_SLAVE_ADDRESS, CMD_START_CONVERSION);
+	I2C_WriteCommand(DS1631_SLAVE_ID, CMD_START_CONVERSION);
 }
 
-float convert_temperature(uint16_t val){
-	uint8_t i = 0, right_shift =14;
-	float tempval, result = 0;
-	uint16_t temp;
+float convert_temp(uint16_t val){
+	uint8_t i = 0, j =14;
+	float tempval,result = 0;
+	uint16_t temp,mask_value;
 
-	for(i = 1 ; i < 15 ; i++){;
-     temp = (val & MASK >> i)>>right_shift;
-     right_shift--;
+	for(i = 1 ; i < 15 ; i++){
+	 mask_value = MASK >> i;
+     temp = (val & mask_value);
+     temp = temp >> j;
      tempval = temp*MUL;
      MUL = MUL/2;
+     j--;
      result = result + tempval;
 	}
-	ResetMultiplciationfactor;
+	MUL = 64;
 	return result;
 }
 
-float read_Temperature (void)
+float DS1631_Read_Temperature (void)
 {
-	uint8_t read_temp[3];
+	uint8_t read_temp[4] = {5,5,5};
 	uint16_t readvalue;
 	float temp;
-	I2C_ReadRegisters(DS1631_SLAVE_ADDRESS,CMD_READ_TEMP,2,read_temp);
+	I2C_ReadRegisters(DS1631_SLAVE_ID,CMD_READ_TEMP,3,read_temp);
 	readvalue = ((read_temp[1] << 8) | read_temp[2]);
-	temp = convert_temperature(readvalue);
+	temp = convert_temp(readvalue);
 	return temp;
 }
