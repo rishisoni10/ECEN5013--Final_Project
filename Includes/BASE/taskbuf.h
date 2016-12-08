@@ -47,10 +47,38 @@ uint32_t size; /*The total capacity of the buffer*/
 uint8_t count; /*Total number of elements currently in buffer*/
 } taskqueue_t;
 
+/********************************************************************/
+/*description: this function initializes the
+ circular buffer for task queue										*/
+/*parameter: void				 								    */
+/*return:    void								                    */
+/********************************************************************/
 void    taskBuff_init(taskqueue_t*,uint8_t ,task* );
+
+/**********************************************************************/
+/*description: this function pushes the task to the head of the buffer*/
+/*return:    0 = no element in queue 1 = success			          */
+/**********************************************************************/
 uint8_t task_Push(taskqueue_t*,task );
+
+/********************************************************************/
+/*description: this function pops the task from tail of the buffer  */
+/*return:    0 = no element in queue 1 = success			        */
+/********************************************************************/
 uint8_t task_Pop(taskqueue_t*, task*);
+
+/********************************************************************/
+/*description: this function checks if the task buffer is full 		*/
+/*parameter: the task buffer     								    */
+/*return:    0 = not full 1 = full			                    */
+/********************************************************************/
 uint8_t Is_buffer_full(taskqueue_t *c);
+
+/********************************************************************/
+/*description: this function checks if the task buffer is empty		*/
+/*parameter: the task buffer     								    */
+/*return:    0 = not empty 1 = empty			                    */
+/********************************************************************/
 uint8_t Is_buffer_Empty(taskqueue_t *c);
 
 #endif /*  */
