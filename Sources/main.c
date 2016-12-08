@@ -33,7 +33,7 @@
 #define PI 3.14159265
 #define Max_EngTemp_allowed 18
 
-uint32_t Speed;
+float Speed;
 float Distance;
 uint32_t flag =0;
 
@@ -52,7 +52,6 @@ uint32_t seconds , minutes, onesecond, hours;
  uint8_t fasttask_trig = 0;
  uint8_t midtask_trig = 0;
  uint8_t slowtask_trig = 0;
-
  uint8_t logtask_trig = 0;
 
 //setup task queues
@@ -78,10 +77,24 @@ typedef enum {
 
 car_orientation_e car_orientation;
 
+typedef enum {
+	state1 = 0,
+	state2,
+	state3,
+	state4,
+	state5,
+	state6,
+	state7,
+	state8,
+	max_state
+}statemachine_state;
+
+statemachine_state state = state1;
+
 float eng_temp[20];
 float avg_engtemp;
 float temp_diaplay;
-float orientation;
+int16_t orientation;
 uint32_t numberof_temp_samples = 0;
 
 //two dimentional: 0 -- previous data 1-- new data . each data has x and y coordinate
@@ -91,6 +104,47 @@ uint32_t GPS_simu[20][2];
 uint32_t nextgpsdata;
 float timesincelast;
 uint32_t engine_crashed;
+
+void statemachine(void){
+	switch(state){
+	case state1:
+		//do all peripheral init
+		uart_init(BAUD_RATE);
+	    state = state2;
+		break;
+	case state2:
+		I2C_Init();
+		state = state3;
+			break;
+	case state3:
+	    TaskTimer_init();
+		state = state4;
+			break;
+	case state4:
+		rtc_Clock_Configuration();
+		rtc_init();
+		state = state5;
+			break;
+	case state5:
+		accel_init();
+		state = state6;
+			break;
+	case state6:
+		led_init();
+		touch_init(1 << 10);
+		state = state7;
+			break;
+	case state7:
+	    Env_Setup();
+	    state = state8;
+			break;
+	case state8:
+		//nothing to do , may call main task
+	default:
+			break;
+	}
+
+}
 
 //todo: remove this function once eeprom is given by rishi
 void simulate_gps(void){
@@ -103,7 +157,7 @@ void simulate_gps(void){
 
 	for(int i = 0; i < 20; i++){
 		for(int j =0; j < 2; j ++){
-			GPS_simu[i][j] = i;
+			GPS_simu[i][j] = i*5;
 		}
 	}
 }
@@ -150,8 +204,8 @@ void task_scheduler(void){
 	}
 	else {
 		//push next fast task in task queue
-		task_Push(&taskbuffer,logtaskarray[logtask1]);
-		task_Push(&taskbuffer,logtaskarray[logtask1]);
+		task_Push(&taskbuffer,midtaskarray[midtask2]);
+		task_Push(&taskbuffer,midtaskarray[midtask2]);
 	}
 }
 
@@ -162,27 +216,29 @@ void Task_Display(void){
 	LOG_2(" : ",minutes);
 	LOG_2(" : ",seconds);
 	LOG_0("\n\r");
-    LOG_0("Value From GPS - ");
-	LOG_2(" X_GPS - ",GPS_Data[1][0]);
-	LOG_2(" Y_GPS - ",GPS_Data[1][1]);
-	LOG_0("\n\r");
-	LOG_0("refined value - ");
+	LOG_0("refined value - \n\r");
 	LOG_2(" X_pos - ",Calculated_Position_x);
-	LOG_2(" Y_pos - ",Calculated_Position_y);
+	LOG_2(" \n\r Y_pos - ",Calculated_Position_y);
 	LOG_0("\n\r");
-	LOG_1("Speed = ", Speed);
-	LOG_0("\n\r");
-	LOG_1("Distance =", Distance);
-	LOG_0("\n\r");
-	LOG_1("Time =",timesincelast);
+	LOG_2("Speed = ", Speed);
 	LOG_0("\n\r");
 	LOG_2("temp = ",temp_diaplay);
 	LOG_0(" * C       ");
 	LOG_0("\n\r");
 	if(engine_crashed){
-	LOG_0("engine heat up !!");
+	LOG_0("engine heat up !!\n\r");
+	R(1);
+	G(0);
+	B(0);
 	}
-	if (car_orientation == Car_left){
+	else{
+		LOG_0("                 \n\r");
+		R(0);
+		G(0);
+		B(0);
+		}
+
+	if (car_orientation == Car_right){
 		LOG_0("       ___           \n\r");
 		LOG_0("      /___/          \n\r");
 		LOG_0("    /     /          \n\r");
@@ -190,18 +246,18 @@ void Task_Display(void){
 		LOG_0("   /___/             \n\r");
 	}
 	else if (car_orientation == Car_left){
-		LOG_0("    ___              \n\r");
-		LOG_0("   \ ___\            \n\r");
-		LOG_0("   \      \          \n\r");
-		LOG_0("    \ _____\         \n\r");
-		LOG_0("      \ ___\         \n\r");
+		LOG_0("      ___             \n\r");
+	    LOG_0("    \\ ___\\            \n\r");
+	    LOG_0("    \\      \\           \n\r");
+	    LOG_0("     \\ _____\\           \n\r");
+	    LOG_0("       \\ ___\\           \n\r");
 	}
 	else{
 		LOG_0("     ___             \n\r");
 	    LOG_0("    |___|            \n\r");
 	    LOG_0("   |     |           \n\r");
 	    LOG_0("   |_____|           \n\r");
-	    LOG_0("   \_____/           \n\r");
+	    LOG_0("    |___|           \n\r");
 	}
 
 }
@@ -216,9 +272,12 @@ void task_CaptureGPS(void){
 	//todo : call eeprom funtion once available
 	GPS_Data[1][0]= GPS_simu[nextgpsdata][0];
 	GPS_Data[1][1]= GPS_simu[nextgpsdata][1];
-
 	(nextgpsdata < 20) ? (nextgpsdata++) : (nextgpsdata = 0);
 	//LOG_0("Task - 1 \n\r");
+	Task_Display();
+	Task_Display();
+	Task_Display();
+	Task_Display();
 	Task_Display();
 	Task_Display();
 	Task_Display();
@@ -228,14 +287,18 @@ void task_CaptureGPS(void){
 void task_CheckEngineHealth(void){
 	//check that the avg temp of engine is above a threshold
 	avg_engtemp = Calculate_average_temp();
-	if(avg_engtemp > Max_EngTemp_allowed){
+	if(temp_diaplay > Max_EngTemp_allowed){
 		engine_crashed = 1;
 	}
 	else{
 		engine_crashed = 0;
 	}
 	numberof_temp_samples = 0;//reset temp array
-	LOG_0("Task - 2 \n\r");
+	// LOG_0("Task - 2 \n\r");
+	Task_Display();
+	Task_Display();
+	Task_Display();
+	Task_Display();
 	Task_Display();
 	Task_Display();
 	Task_Display();
@@ -248,8 +311,12 @@ void task_UpdateDistance(void){
 	OldTime = NewTime;
 	NewTime = minutes*60 + seconds + (traveltimer * (0.000004))  ; //updated in rtc irq
 	timesincelast = NewTime - OldTime; //total number of seconds since last calculation
-	Distance = 5 * timesincelast; // update distance is called before update speed always so uses last captured speed value
+	Distance = Speed * timesincelast; // update distance is called before update speed always so uses last captured speed value
 	//LOG_0("Task - 3 \n\r");
+	Task_Display();
+	Task_Display();
+	Task_Display();
+	Task_Display();
 	Task_Display();
 	Task_Display();
 	Task_Display();
@@ -258,42 +325,34 @@ void task_UpdateDistance(void){
 
 
 void task_UpdateSpeed(void){
-		touchValue[1] = touch_data(10);
-		if((touchValue[1] > (touchValue[0] + 2))  && (flag >0)){
-			Speed = Speed + 5;
-		}
-		if((touchValue[1] < (touchValue[0] -2)) && (flag >0)){
-			Speed = Speed -5;
-		}
-		flag =1;
-		touchValue[0] = touchValue[1];
-		if(Speed > 320){
-			Speed = 320;
-		}
-		if(Speed < 2){
-			Speed = 0;
-		}
 		//LOG_0("Task - 4 \n\r");
 		Task_Display();
 		Task_Display();
 		Task_Display();
 		Task_Display();
+		Task_Display();
+		Task_Display();
+	    Task_Display();
+		Task_Display();
 }
 
 void Speed_check(void){
 	        touchValue[1] = touch_data(10);
-			if((touchValue[1] > (touchValue[0] + 2))  && (flag >0)){
-				Speed = Speed + 5;
+
+			if((touchValue[1] > (touchValue[0] + 15)) && (Speed < 305)){
+				Speed = Speed + 5.5;
 			}
-			if((touchValue[1] < (touchValue[0] -2)) && (flag >0)){
-				Speed = Speed -5;
+			if((touchValue[1] < (touchValue[0] - 15))  && (Speed > 15)){
+				Speed = Speed - 5.4;
 			}
-			flag =1;
+
 			touchValue[0] = touchValue[1];
-			if(Speed > 320){
+
+			if(Speed >= 320){
 				Speed = 320;
 			}
-			if(Speed < 2){
+
+			if(Speed <= 2){
 				Speed = 0;
 			}
 }
@@ -302,19 +361,22 @@ void task_UpdateDirection(void){
 	//update the orientation of car using ax sensor
 	 orientation = 0;
 	//LOG_0("Task - 5 \n\r");
+	 accel_read();
 
-	 //accel_read();
-
-	 if(orientation > 0){
+	 if( resulty < 0){
 		 car_orientation = Car_right;
 	 }
-	 else if(orientation < 0){
+	 else if( resulty > 0){
 		 car_orientation = Car_left;
 	 }
 	 else
 	 {
 		 car_orientation = car_straight;
 	 }
+	 Task_Display();
+	 Task_Display();
+	 Task_Display();
+	 Task_Display();
 	 Task_Display();
 	 Task_Display();
 	 Task_Display();
@@ -328,6 +390,10 @@ void task_UpdateCordinate(void){
 	x_travel = Distance * cos (orientation*val);
 	y_travel = Distance * sin (orientation*val);
 	//LOG_0("Task - 6 \n\r");
+	Task_Display();
+	Task_Display();
+	Task_Display();
+	Task_Display();
 	Task_Display();
 	Task_Display();
 	Task_Display();
@@ -349,6 +415,10 @@ void task_CalculatePosition(void){
     Task_Display();
     Task_Display();
     Task_Display();
+    Task_Display();
+    Task_Display();
+    Task_Display();
+    Task_Display();
 }
 
 void task_CaptureEngineTemp(void){
@@ -357,6 +427,10 @@ void task_CaptureEngineTemp(void){
 	eng_temp[numberof_temp_samples] = temp_diaplay;
 	(numberof_temp_samples < 20) ? (numberof_temp_samples++) : (numberof_temp_samples = 0);
 	//LOG_0("Task - 8 \n\r");
+	Task_Display();
+	Task_Display();
+	Task_Display();
+	Task_Display();
 	Task_Display();
 	Task_Display();
 	Task_Display();
@@ -370,10 +444,11 @@ void Env_Setup(void){
 
 	//setup array of all slow task
 	slowtaskarray[slowtask1] = &task_CaptureGPS;
-	slowtaskarray[slowtask2] = &task_UpdateDirection;
+	//slowtaskarray[slowtask2] = &task_UpdateDirection;
 
 	//setup array of all mid task
 	midtaskarray[midtask1] = &task_CheckEngineHealth;
+	midtaskarray[midtask2] = &task_UpdateDirection;
 
 	//setup array of all fast task
 	fasttaskarray[fasttask1] = &task_UpdateCordinate;
@@ -381,6 +456,9 @@ void Env_Setup(void){
 	fasttaskarray[fasttask3] = &task_CaptureEngineTemp;
 	fasttaskarray[fasttask4] = &task_UpdateDistance;
 	fasttaskarray[fasttask5] = &task_UpdateSpeed;
+	fasttaskarray[fasttask6] = &task_CheckEngineHealth;
+	fasttaskarray[fasttask7] = &task_UpdateDirection;
+	fasttaskarray[fasttask8] = &task_CaptureGPS;
 
 	//setup array of all  log task
 	logtaskarray[logtask1] = &Task_Display;
@@ -393,38 +471,28 @@ void Env_Setup(void){
 
 int main(void)
 {
-	//do all peripheral init
-	uart_init(BAUD_RATE);
-    I2C_Init();
-    TaskTimer_init();
-	rtc_Clock_Configuration();
-	rtc_init();
-	accel_init();
     //eeprom_init();
-	touch_init(1 << 10);
 	uint8_t istasktorun =0;
-
 	touchValue[1] = 0;
 	touchValue[0] = 0;
-
-    Env_Setup();
-
     while(1){
-    	Speed_check();
-    	if(onesecond){
-    		logtask_trig = 1;
-		    fasttask_trig = 0;
-		    midtask_trig = 0;
-		    slowtask_trig = 0;
-		    onesecond = 0;
-		    traveltimer = 0;
-
-    	}
-    	task_scheduler();
-    	istasktorun = task_Pop(&taskbuffer,&tasktorun);
-    	if(!istasktorun){
-         tasktorun = &Task_Display;
-    	}
-    	tasktorun();
+    	statemachine();
+    	if(state == state8){
+			Speed_check();
+			if(onesecond){
+				logtask_trig = 1;
+				fasttask_trig = 0;
+				midtask_trig = 0;
+				slowtask_trig = 0;
+				onesecond = 0;
+				traveltimer = 0;
+			}
+			task_scheduler();
+			istasktorun = task_Pop(&taskbuffer,&tasktorun);
+			if(!istasktorun){
+			 tasktorun = &Task_Display;
+			}
+			tasktorun();
+		}
     }
 }
