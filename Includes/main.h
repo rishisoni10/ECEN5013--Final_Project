@@ -25,6 +25,7 @@
 #include "BASE/logger.h"
 #include "BASE/profiler.h"
 #include "BASE/ds1631.h"
+#include "ASW/led.h"
 
 extern int totalAlarmSeconds;
 extern uint32_t seconds , minutes, onesecond, hours;
@@ -34,6 +35,7 @@ extern uint8_t midtask_trig ;
 extern uint8_t slowtask_trig ;
 
 extern uint8_t logtask_trig ;
+extern volatile uint32_t traveltimer;
 
 
 #define TRUE 	(1)
