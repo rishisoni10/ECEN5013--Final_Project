@@ -8,6 +8,7 @@
 #include "main.h"
 
 static uint32_t count = 0;
+volatile uint32_t traveltimer = 0;
 
 void TaskTimer_init()
 {
@@ -42,7 +43,6 @@ void TaskTimer_init()
 	//enable_irq(INT_TPM0 - 16);
 
 	count = 0;
-
 }
 
 void stop_TaskTimer()
@@ -59,8 +59,9 @@ void TPM1_IRQHandler()
 	{
 		TPM1_SC |= TPM_SC_TOF_MASK;
 		count++;
+		traveltimer++;
 
-	   if((count % 12) == 0){
+	   if((count % 8) == 0){
 				midtask_trig = 0;
 			    fasttask_trig = 0;
 				slowtask_trig = 1;
