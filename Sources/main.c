@@ -87,6 +87,7 @@ uint32_t GPS_Data[2][2] ;
 //todo: remove once eeprom available
 uint32_t GPS_simu[20][2];
 uint32_t nextgpsdata;
+uint32_t time;
 
 //todo: remove this function once eeprom is given by rishi
 void simulate_gps(void){
@@ -152,35 +153,40 @@ void Task_Display(void){
 	}
 	LOG_0("\n\r");
 	LOG_0("Value From GPS - ");
-	LOG_2("X - ",GPS_Data[1][0]);
-	LOG_2("Y - ",GPS_Data[1][1]);
+	LOG_2("X_GPS - ",GPS_Data[1][0]);
+	LOG_2("Y_GPS - ",GPS_Data[1][1]);
 	LOG_0("\n\r");
 	LOG_0("refined value - ");
-	LOG_2("X - ",Calculated_Position_x);
-	LOG_2("Y - ",Calculated_Position_y);
+	LOG_2("X_pos - ",Calculated_Position_x);
+	LOG_2("Y_pos - ",Calculated_Position_y);
 	LOG_0("\n\r");
-	LOG_1("speed = ",Speed);
+	LOG_1("Speed = ",Speed);
+	LOG_0("\n\r");
+	LOG_1("Distance =",Distance);
+	LOG_0("\n\r");
+	LOG_0("\n\r");
+	LOG_1("Time =",time);
 	LOG_0("\n\r");
 	if (car_orientation == Car_left){
-		LOG_0("       ___   \n\r");
-		LOG_0("      /___/  \n\r");
-		LOG_0("    /     / \n\r");
-		LOG_0("   /_____/ \n\r");
-		LOG_0("   /___/  \n\r");
+		LOG_0("       ___           \n\r");
+		LOG_0("      /___/          \n\r");
+		LOG_0("    /     /          \n\r");
+		LOG_0("   /_____/           \n\r");
+		LOG_0("   /___/             \n\r");
 	}
 	else if (car_orientation == Car_left){
-		LOG_0("    ___   \n\r");
-		LOG_0("   \ ___\  \n\r");
-		LOG_0("   \      \ \n\r");
-		LOG_0("    \ _____\ \n\r");
-		LOG_0("      \ ___\  \n\r");
+		LOG_0("    ___              \n\r");
+		LOG_0("   \ ___\            \n\r");
+		LOG_0("   \      \          \n\r");
+		LOG_0("    \ _____\         \n\r");
+		LOG_0("      \ ___\         \n\r");
 	}
 	else{
-		LOG_0("     ___  \n\r ");
-	    LOG_0("    /___\  \n\r");
-	    LOG_0("   |     | \n\r");
-	    LOG_0("   |_____| \n\r");
-	    LOG_0("   \ ___ /  \n\r");
+		LOG_0("     ___             \n\r");
+	    LOG_0("    /___\            \n\r");
+	    LOG_0("   |     |           \n\r");
+	    LOG_0("   |_____|           \n\r");
+	    LOG_0("   \ ___ /           \n\r");
 	}
 
 }
@@ -215,8 +221,6 @@ void task_CheckEngineHealth(void){
 
 void task_UpdateDistance(void){
 	//calculate the distance traveled with last captured speed in speed task
-	uint32_t time;
-
 	OldTime = NewTime;
 	NewTime = minutes*60 + seconds; //updated in rtc irq
 	time = NewTime - OldTime; //total number of seconds since last calculation
@@ -313,7 +317,7 @@ void Env_Setup(void){
 	fasttaskarray[fasttask2] = &task_CalculatePosition;
 	fasttaskarray[fasttask3] = &task_CaptureEngineTemp;
 
-	//setup array of all log task
+	//setup array of all  log task
 	logtaskarray[logtask1] = &Task_Display;
 
 	//todo: remove once eeprom is available
