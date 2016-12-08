@@ -46,4 +46,13 @@ extern volatile uint32_t traveltimer;
 #define DMA_test
 //#define BBB
 
+#define UNIT_TEST_OFF   0
+#define Test_Temp_On    1
+#define Test_RTC_On     2
+#define Test_Touch_On   3
+#define Test_Main_On    4
+#define Test_Task_On    5
+
+#define UNIT_TEST  UNIT_TEST_OFF
+
 #endif /* INCLUDES_HSW_MAIN_H_ */
