@@ -6,9 +6,7 @@ int16_t resultx, resulty, resultz;
 void accel_init(void)
 {
     unsigned char tmp;
-    //printf("****Accelerometor init ****\n");
-    //Configure MMA8451 sensor //MMA8451Q
-    hal_dev_mma8451_init();      //Initialize I2C modules
+    hal_dev_mma8451_init();
     tmp = hal_dev_mma8451_read_reg(0x2a);
     hal_dev_mma8451_write_reg(0x2a,tmp|0x01);
 }
@@ -41,8 +39,7 @@ void accel_read(void)
         resultz  |= hal_dev_mma8451_read_reg(0x06);
         resultz >>= 8;
 
-        angle_calculation(); //-900  to  900
-       // detect_fall_detection();
+        angle_calculation();
     }
 }
 
