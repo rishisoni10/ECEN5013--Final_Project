@@ -2,12 +2,12 @@
 #ifndef Angle_H_
 #define Angle_H_
 
-#define NUM_MUESTRAS_MEDIANA 8
+#define NUM_MEDIUM_SAMPLES 8
 
-struct tipo_mediana
+struct different_samples
   {
- unsigned char   ap_muestras;
- int buffer_muestras[NUM_MUESTRAS_MEDIANA];
+ unsigned char   samples;
+ int buffer_samples[NUM_MEDIUM_SAMPLES];
   };
 
 
